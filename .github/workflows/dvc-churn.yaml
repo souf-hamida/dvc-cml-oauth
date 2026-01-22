@@ -12,6 +12,10 @@ jobs:
 
     env:
       REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      AWS_EC2_METADATA_DISABLED: "true"
 
     steps:
       - name: Checkout repository
@@ -32,12 +36,8 @@ jobs:
           pip install "dvc[s3]==3.63.0"
 
       - name: DVC pull (restore data/models depuis S3)
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
         run: |
-          dvc pull -v || echo "No remote cache yet"
+          dvc pull -v 
 
       - name: Train / Evaluate model(s)
         run: |
@@ -52,8 +52,13 @@ jobs:
           git commit -m "Update DVC artifacts [skip ci]" || echo "Nothing to commit"
 
       - name: Push data & models to DVC remote
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
         run: |
           dvc push -v
+
 
       - name: Generate and publish CML report
         run: |
